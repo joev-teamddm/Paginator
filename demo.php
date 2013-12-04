@@ -1,5 +1,7 @@
 <?php
 //In your controller:
+$all_events = new Event();
+$all_events->find();
 
 $results_per_page = 2;
 $paginator = new Paginator($all_events, $results_per_page);
