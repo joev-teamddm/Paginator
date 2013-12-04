@@ -1,5 +1,4 @@
 <?php
-
 //In your controller:
 
 $results_per_page = 2;
