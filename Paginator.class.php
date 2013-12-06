@@ -49,9 +49,16 @@ class Paginator {
 		return $this->current_page > 1;
 	}
 
-	public function printNavigation($url_template = '?page=:page')
+	public function printNavigation($url_template)
 	{
-		$this->url_template = $url_template;
+		if(isset($url_template)){
+			$this->navigation_type = 'url';
+			$this->url_template = $url_template;
+		}else{
+			$this->navigation_type = 'parameter';
+		}
+		$this->getUrl($this->current_page);
+		exit();
 		
 		echo '<ul class="pagination-list">';
 		if($this->hasPreviousPage()){
@@ -83,9 +90,29 @@ class Paginator {
 		}
 	}
 
+	//pass a url template in the form of '/events/page/:page' where :page is the placeholder for the page #
+	//if you leave it empty, it will assume a GET parameter of 'page'
 	private function getUrl($page_number)
 	{
-		return str_replace(':page', $page_number, $this->url_template);
+		if($this->navigation_type == 'parameter'){
+			$pattern = '/page=\d+/';
+			$replace = 'page='.$page_number;
+
+			if(preg_match($pattern, $_SERVER['REQUEST_URI'])){
+				return preg_replace($pattern, $replace, $_SERVER['REQUEST_URI']);
+			}else{
+				if(preg_match('/\?/', $_SERVER['REQUEST_URI'])){
+					return $_SERVER['REQUEST_URI'] . '&' . $replace;
+				}else{
+					return $_SERVER['REQUEST_URI'] . '?' . $replace;
+				}
+			}
+		}else{
+			$url_parts = explode('?', $_SERVER['REQUEST_URI']);
+			$url_parts[0] = str_replace(':page', $page_number, $this->url_template);
+			return implode('?', $url_parts);
+		}
+		
 	}
 
 }

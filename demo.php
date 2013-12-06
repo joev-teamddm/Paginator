@@ -12,4 +12,6 @@ foreach($events as $event){
 	echo $event;
 }
 //print pagination links
+//pass a url template in the form of '/events/page/:page' where :page is the placeholder for the page #
+//if you leave it empty, it will assume a GET parameter of 'page'
 $paginator->printNavigation('/events/page/:page');
