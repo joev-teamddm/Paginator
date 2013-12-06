@@ -49,16 +49,15 @@ class Paginator {
 		return $this->current_page > 1;
 	}
 
-	public function printNavigation($url_template)
+	//pass a url template in the form of '/events/page/:page' where :page is the placeholder for the page #
+	//if you leave it empty, it will assume a GET parameter of 'page'
+	public function printNavigation($route)
 	{
-		if(isset($url_template)){
-			$this->navigation_type = 'url';
-			$this->url_template = $url_template;
+		if(isset($route)){
+			$this->build_url_for_route($route);
 		}else{
-			$this->navigation_type = 'parameter';
+			$this->build_url_for_parameter();
 		}
-		$this->getUrl($this->current_page);
-		exit();
 		
 		echo '<ul class="pagination-list">';
 		if($this->hasPreviousPage()){
@@ -81,6 +80,27 @@ class Paginator {
 		echo '</ul>';
 	}
 
+	private function build_url_for_parameter(){
+		$pattern = '/page=\d+/';
+		$replace = 'page=:page';
+
+		if(preg_match($pattern, $_SERVER['REQUEST_URI'])){
+			$this->url_template = preg_replace($pattern, $replace, $_SERVER['REQUEST_URI']);
+		}else{
+			if(preg_match('/\?/', $_SERVER['REQUEST_URI'])){
+				$this->url_template = $_SERVER['REQUEST_URI'] . '&' . $replace;
+			}else{
+				$this->url_template = $_SERVER['REQUEST_URI'] . '?' . $replace;
+			}
+		}
+	}
+
+	private function build_url_for_route($route){
+		$url_parts = explode('?', $_SERVER['REQUEST_URI']);
+		$url_parts[0] = $route;
+		$this->url_template = implode('?', $url_parts);
+	}
+
 	private function calculateTotalPages()
 	{
 		if($this->count > $this->items_per_page){
@@ -90,29 +110,9 @@ class Paginator {
 		}
 	}
 
-	//pass a url template in the form of '/events/page/:page' where :page is the placeholder for the page #
-	//if you leave it empty, it will assume a GET parameter of 'page'
 	private function getUrl($page_number)
 	{
-		if($this->navigation_type == 'parameter'){
-			$pattern = '/page=\d+/';
-			$replace = 'page='.$page_number;
-
-			if(preg_match($pattern, $_SERVER['REQUEST_URI'])){
-				return preg_replace($pattern, $replace, $_SERVER['REQUEST_URI']);
-			}else{
-				if(preg_match('/\?/', $_SERVER['REQUEST_URI'])){
-					return $_SERVER['REQUEST_URI'] . '&' . $replace;
-				}else{
-					return $_SERVER['REQUEST_URI'] . '?' . $replace;
-				}
-			}
-		}else{
-			$url_parts = explode('?', $_SERVER['REQUEST_URI']);
-			$url_parts[0] = str_replace(':page', $page_number, $this->url_template);
-			return implode('?', $url_parts);
-		}
-		
+		echo str_replace(':page', $page_number, $this->url_template);
 	}
 
 }
